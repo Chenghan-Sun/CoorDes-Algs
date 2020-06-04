@@ -10,7 +10,17 @@ library(pracma)
 m = 300
 n = 500
 s = 2
-A = randn(m, n)
+
+u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
+v = randortho(n)
+
+s_c_diag = runif(min(m, n), min=30, max=50)
+s_c_diag[271:300] = 0
+s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
+
+# sigular value decomposition
+A = u%*%s_c%*%v  # for convexity assumption
+
 xs = zeros(n, 1)
 picks = randperm(n)
 xs[picks[1:s]] = 100*randn(s, 1)
@@ -56,7 +66,7 @@ RCDM = function(A, b, xk, xs, cr, iter_k,
     gd[iter_k] = gd_k
     
     # update xk
-    xk[iter_k] = xk[iter_k] - alpha%*%gd[iter_k]
+    xk[iter_k] = xk[iter_k] - alpha*gd[iter_k]
     # print(xk[iter_k])
     
     # update stopping criterion 
@@ -66,13 +76,14 @@ RCDM = function(A, b, xk, xs, cr, iter_k,
       print(cr[k+1])
     }
     
-    # update error 
-    fx = c(fx, quadratic_obj(A%*%xk, b))
-    error = c(error, norm((xk - xs), "2"))
-    #print(error[k])
-    
     # update k
     k = k+1
+    
+    # update error 
+    fx = c(fx, quadratic_obj(A%*%xk, b))
+    # fx = c(fx, 1/2*(norm(A%*%xk-b, "2"))^2)
+    error = c(error, norm((xk - xs), "2"))
+    #print(error[k])
     
     # update iter_k
     iter_k = mod(iter_k, n)+1
