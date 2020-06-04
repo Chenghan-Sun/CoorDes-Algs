@@ -37,7 +37,7 @@ cr = c(1)
 iter_k = 1 
 
 # Coordinate Descent method
-RCDM = function(A, b, xk, xs, cr, fxopt, iter_k, 
+RCDM = function(A, b, xk, xs, cr, iter_k, 
                 alpha=0.001, tol=10^-2, maxIter=10^7, rule="cyclic") {
   
   # initialize x 
@@ -56,14 +56,15 @@ RCDM = function(A, b, xk, xs, cr, fxopt, iter_k,
     gd[iter_k] = gd_k
     
     # update xk
-    xk[iter_k] = xk[iter_k] - alpha*gd[iter_k]
+    xk[iter_k] = xk[iter_k] - alpha%*%gd[iter_k]
     # print(xk[iter_k])
     
     # update stopping criterion 
     cr[k+1] = norm(xk-xs, "2") / norm(xs, "2")
-    print(cr[k+1])
     
-    print(cr[k+1])
+    if (mod(k, 1000) == 0) {
+      print(cr[k+1])
+    }
     
     # update error 
     fx = c(fx, quadratic_obj(A%*%xk, b))
@@ -84,7 +85,7 @@ RCDM = function(A, b, xk, xs, cr, fxopt, iter_k,
   return(list(k, cr, error))
 }
 
-RCDM_results = RCDM(A, b, xk, xs, cr, fxopt, iter_k)
+RCDM_results = RCDM(A, b, xk, xs, cr, iter_k)
 
 
 
