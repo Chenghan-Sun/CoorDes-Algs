@@ -25,7 +25,8 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = 1,
   # initialize gradient vector
   gd =  zeros(n, 1)
   
-  fx = c()
+  fx = c(quadratic_obj(A%*%xk, b))
+  fstar  =  quadratic_obj(A%*%xs, b)
   error = c()
   
   # Define the objective function
@@ -34,7 +35,7 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = 1,
     return(fun_val)
   }
   
-  while (cr[k] >= tol) {
+  while (abs(fx[k] - fstar) >= tol) {
     # update the gradient
     u = A%*%xk - b
     A1 = t(A)
@@ -59,6 +60,7 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = 1,
     
     # update error 
     fx = c(fx, quadratic_obj(A%*%xk, b))
+    
     # fx = c(fx, 1/2*(norm(A%*%xk-b, "2"))^2)
     error = c(error, norm((xk - xs), "2"))
     #print(error[k])
@@ -71,7 +73,7 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = 1,
       break
     }
   }
-  return(list(k = k, cr = cr, error = error))
+  return(list(k = k, cr = cr, error = error, fx = fx))
 }
 
 ### Experiment ### 
@@ -136,4 +138,116 @@ num_iter = sapply(kappa, function(kappa){
   RCDM_results$k
 })
 plot(kappa, num_iter)
+
+
+
+
+### seperable CD ###
+SpCD <- function(A, b, xs, lambda = 1, xk = NULL, cr = NULL, 
+                 alpha = 0.001, tol = 1e-2, maxIter = 1e7){
+  # set k as the counter
+  # CGD method terminates when norm(xk-xs)/norm(xs) smaller than given epsi = 10^-3
+  # denote norm(xk-xs)/norm(xs) = cr (criterion)
+  k = 1
+  cr = c(1)
+  
+  # initialize x 
+  if (is.null(xk)){
+    xk = zeros(n, 1)
+  }
+  #gradient 
+  gd_k = 0 
+  
+  
+  # Define the objective function
+  quadratic_obj = function(xk, y){
+    fun_val = 0.5*norm((y - A%*%xk), "2")^2 + lambda * sum(abs(xk))
+    return(fun_val)
+  }
+  
+  fx = c(quadratic_obj(xk, b))
+  fstar  =  quadratic_obj(xs, b)
+  error = c()
+  
+  while (abs(fx[k] - fstar) >= tol) {
+    # update the gradient
+    u = A%*%xk - b
+    A1 = t(A)
+    gd_k = A1[iter_k, ]%*%u
+    
+    #### update xk
+    sub.optim <- function(x){
+      gd_k * (x - xk[iter_k]) + 1 / (2 * alpha) * (x - xk[iter_k]) ^ 2 + lambda * abs(x)
+    }
+    sub.optim.result = optim(0, sub.optim, method = "BFGS")
+    z_k = sub.optim.result$par
+    xk[iter_k] = z_k
+    #print(z_k)
+    
+    # update stopping criterion 
+    cr[k+1] = norm(xk-xs, "2") / norm(xs, "2")
+    
+    if (mod(k, 1000) == 0) {
+      #print(c(paste("step", k),paste("error", cr[k+1]) ))
+      print(c(paste("step", k), paste("error", fx[k] - fstar) ))
+      #print(gd[iter_k])
+      #print(xk)
+      #print(z_k)
+      #print(xk)
+    }
+    
+    
+    # update error 
+    fx = c(fx, quadratic_obj(xk, b))
+    error = c(error, norm((xk - xs), "2"))
+    
+    # update k
+    k = k+1
+    
+    # update iter_k
+    iter_k = mod(iter_k, n) + 1
+    
+    if (k > maxIter) {
+      print(paste("Algorithm unfinished by reaching the maximum iterations."))
+      break
+    }
+  }
+  print(xk)
+  return(list(k = k, cr = cr, error = error, fx = fx ))
+}
+
+
+### Experiment ### 
+# input sparse data points, here xs is the true solution that we want to find
+m = 100
+n = 200
+k = 50
+s = 30
+
+
+u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
+v = randortho(n)
+
+#s_c_diag = runif(min(m, n), min= 1 / sqrt(k), max = 1)
+s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
+s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
+
+# sigular value decomposition
+A = u%*%s_c%*%v  # for convexity assumption
+
+#xs = rnorm(n)
+xs  = zeros(n, 1)
+xs[1:s,] = 1
+b   = A %*% xs 
+#solve(t(A) %*% A, t(A) %*% b)
+# t(A) %*% A 
+
+SpCD_results = SpCD(A, b, xs, lambda = 0.01, alpha = 1, tol = 0.0001)
+RCDM_results = RCDM(A, b, xs, alpha = 1, tol = 0.005)
+SpCD_results$k
+RCDM_results$k
+
+plot(SpCD_results$fx)
+plot(RCDM_results$fx)
+
 
