@@ -149,7 +149,6 @@ plot(kappa, num_iter)
 
 
 
-
 ### seperable CD ###
 SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL, 
                  alpha = 0.001, tol = 1e-2, maxIter = 1e7){
@@ -246,7 +245,7 @@ A = u%*%s_c%*%v  # for convexity assumption
 #xs = rnorm(n)
 xs  = zeros(n, 1)
 xs[1:s,] = 1
-b   = A %*% xs 
+b = A %*% xs 
 #solve(t(A) %*% A, t(A) %*% b)
 # t(A) %*% A 
 
