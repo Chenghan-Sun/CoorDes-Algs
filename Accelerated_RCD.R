@@ -69,6 +69,7 @@ A_RCDM = function(A, b, xs, sigma_max, xk = NULL, cr = NULL, iter_k = NULL,
     
     # set dk
     u1 = alpha_k*A%*%mu_k + (1 - alpha_k)*A%*%xk - b
+    A1 = t(A)
     dk = (1 - alpha_k)*A1[iter_k, ]%*%u1
     
     # update xk
@@ -82,7 +83,10 @@ A_RCDM = function(A, b, xs, sigma_max, xk = NULL, cr = NULL, iter_k = NULL,
     }
     
     # update mu_k
-    mu_k = beta_k*mu_k + (1 - beta_k)*y_k - (gamma_k_new/sigma_max^2)*dk
+    #print(beta_k*mu_k)
+    #print((1 - beta_k)*y_k)
+    #print((gamma_k_new/sigma_max^2)*dk)
+    mu_k[iter_k] = beta_k*mu_k[iter_k] + (1 - beta_k)*y_k[iter_k] - (gamma_k_new/sigma_max^2)*dk
     
     # update gamma
     gamma_k = gamma_k_new
@@ -102,6 +106,35 @@ A_RCDM = function(A, b, xs, sigma_max, xk = NULL, cr = NULL, iter_k = NULL,
   }
   return(list(k = k, cr = cr, error = error, fx = fx))
 }
+
+### Experiment ### 
+# input data points, here xs is the true solution that we want to find
+m = 100
+n = 50
+k = 30
+
+
+u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
+v = randortho(n)
+
+#s_c_diag = runif(min(m, n), min= 1 / sqrt(k), max = 1)
+s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
+s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
+
+# sigular value decomposition
+A = u%*%s_c%*%v  # for convexity assumption
+
+#xs = rnorm(n)
+xs  = ones(n, 1)
+b = A%*%xs + 1 / (1 * 1000) * rnorm(m)
+# solve(t(A) %*% A, t(A) %*% b)
+# t(A) %*% A 
+
+A_RCDM_results = A_RCDM(A, b, xs, sigma_max=max(s_c_diag), tol = 0.0001)
+print(paste("The total number of iteration for ARCD algorithm = ", A_RCDM_results$k))
+
+#gap vs iteration 
+plot(A_RCDM_results$cr)
 
 
 
