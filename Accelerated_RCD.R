@@ -9,15 +9,27 @@ library(pracma)
 
 
 # Coordinate Descent method
-A_RCDM = function(A, b, xs, sigma_max, xk = NULL, cr = NULL, iter_k = NULL, 
-                  mu_k=NULL, gamma_k=0, tol=10^-2, maxIter=10^7) {
-  # Params: 
-  # 
+A_RCDM = function(A, b, xs, alpha = 1, Sigma = NULL, xk = NULL, iter_k = NULL, 
+                   gamma_k=0, tol=10^-2, maxIter=10^7) {
+  ### Solve quadratic form functions min_x f(x) = (Ax - b) ^ 2  ###
+  ### Algorithm : Accelerated Coordinate Descent method "Nesterov, Y.: Effciency of coordinate descent methods on huge-scale optimization problems."
+  ### A the input matrix, b vector, xs the true parameters 
+  ### Sigma eigenvalues of A^TA, we use this to control L_i in the algorithm, 
+  ### alpha fixed stepsize 
+  ### xk initial value of the optimization problem 
+  ### stopping criterion f(xk) - fstar < tol, where fstar = f(xs), we stop the function if the iteration exceed maxIter.
   
+  # Params: 
+  #dim of xs 
   n = ncol(A)
   
   # set k as the counter
   k = 1
+  
+  # calculate Sigma 
+  if(is.null(Sigma)){
+    Sigma = alpha * eigen(t(A) %*% A)$values
+  }
   
   # denote cr = norm(xk-xs)/norm(xs) as the a criterion
   cr = c(1)
@@ -28,9 +40,7 @@ A_RCDM = function(A, b, xs, sigma_max, xk = NULL, cr = NULL, iter_k = NULL,
   }
   
   # initialize mu_k as a vector of sub-direction 
-  if (is.null(mu_k)){
-    mu_k = zeros(n, 1)
-  }
+  mu_k = xk
   
   # Define the objective function
   quadratic_obj = function(y, yhat){
@@ -50,16 +60,16 @@ A_RCDM = function(A, b, xs, sigma_max, xk = NULL, cr = NULL, iter_k = NULL,
   }
   
   # main loop 
-  while (abs(fx[k] - fstar) >= tol) {
+  while (fx[k] - fstar >= tol) {
     # choose gamma_k to be the larger root 
-    a = 1
-    b = (sigma_max*gamma_k^2/n) - (1/n)
-    c = -gamma_k^2
-    gamma_k_new = large_root_finder(a, b, c)
+    para.a = 1
+    para.b = (min(Sigma)*gamma_k^2/n) - (1/n)
+    para.c = -gamma_k^2
+    gamma_k_new = large_root_finder(para.a, para.b, para.c)
     
     # set alpha_k and beta_k
-    alpha_k = (n - gamma_k_new*sigma_max) / (gamma_k_new*(n^2 - sigma_max))
-    beta_k = 1 - gamma_k_new*sigma_max/n
+    alpha_k = (n - gamma_k_new*min(Sigma)) / (gamma_k_new*(n^2 - min(Sigma)))
+    beta_k  =  1 - gamma_k_new*min(Sigma)  / n
     
     # set y_k
     y_k = alpha_k*mu_k + (1-alpha_k)*xk
@@ -68,25 +78,33 @@ A_RCDM = function(A, b, xs, sigma_max, xk = NULL, cr = NULL, iter_k = NULL,
     iter_k = sample(n, 1)
     
     # set dk
-    u1 = alpha_k*A%*%mu_k + (1 - alpha_k)*A%*%xk - b
-    A1 = t(A)
-    dk = (1 - alpha_k)*A1[iter_k, ]%*%u1
+    # u1 = alpha_k*A%*%mu_k + (1 - alpha_k)*A%*%xk - b
+    # A1 = t(A)
+    # dk = (1 - alpha_k)*A1[iter_k, ]%*%u1
+    
+    dk = t(A[, iter_k]) %*% ( A %*% y_k - b ) 
     
     # update xk
-    xk[iter_k] = y_k[iter_k] - (1/sigma_max^2)*dk
+    #xk[iter_k] = y_k[iter_k] - (1/sigma_max^2)*dk
+    xk = y_k
+    xk[iter_k] = xk[iter_k] - (1 / Sigma[iter_k]) * dk
     
     # update criterion cr
     cr[k+1] = norm(xk-xs, "2") / norm(xs, "2")
     
     if (mod(k, 1000) == 0) {
       print(c(paste("step", k), paste("error", cr[k+1])))
+      print(paste("value of objective function", fx[k]))
+      
     }
     
     # update mu_k
     #print(beta_k*mu_k)
     #print((1 - beta_k)*y_k)
     #print((gamma_k_new/sigma_max^2)*dk)
-    mu_k[iter_k] = beta_k*mu_k[iter_k] + (1 - beta_k)*y_k[iter_k] - (gamma_k_new/sigma_max^2)*dk
+    mu_k = beta_k * mu_k + (1 - beta_k) * y_k 
+    mu_k[iter_k] = mu_k[iter_k] - (gamma_k_new/Sigma[iter_k]^2) * dk
+    #mu_k[iter_k] = beta_k*mu_k[iter_k] + (1 - beta_k)*y_k[iter_k] - (gamma_k_new/Sigma[iter_k]^2)*dk
     
     # update gamma
     gamma_k = gamma_k_new
@@ -104,10 +122,11 @@ A_RCDM = function(A, b, xs, sigma_max, xk = NULL, cr = NULL, iter_k = NULL,
       break
     }
   }
-  return(list(k = k, cr = cr, error = error, fx = fx))
+  print(xk)
+  return(list(k = k, cr = cr, error = error, fx = fx, xk = xk))
 }
 
-### Experiment ### 
+##### Experiment #####
 # input data points, here xs is the true solution that we want to find
 m = 100
 n = 50
@@ -126,15 +145,54 @@ A = u%*%s_c%*%v  # for convexity assumption
 
 #xs = rnorm(n)
 xs  = ones(n, 1)
-b = A%*%xs + 1 / (1 * 1000) * rnorm(m)
-# solve(t(A) %*% A, t(A) %*% b)
+b = A%*%xs + 1 / (1 * 500) * rnorm(m)
+solve(t(A) %*% A, t(A) %*% b)
 # t(A) %*% A 
 
-A_RCDM_results = A_RCDM(A, b, xs, sigma_max=max(s_c_diag), tol = 0.0001)
+A_RCDM_results = A_RCDM(A, b, xs, alpha = 15, tol = 0.01)
+A_RCDM_results = A_RCDM(A, b, xs, alpha = 1, Sigma = rep(1, n), tol = 0.01)
+
 print(paste("The total number of iteration for ARCD algorithm = ", A_RCDM_results$k))
 
-#gap vs iteration 
+### gap vs iteration ###
 plot(A_RCDM_results$cr)
+
+
+### eps vs nums of iteration (strong convex)###
+set.seed(100)
+N = 100
+eps = seq(0.005, 0.1, length.out = N)
+num_iter = sapply(eps, function(eps){
+  A_RCDM_results = A_RCDM(A, b, xs, alpha = 1, Sigma = rep(1, n), tol = eps)
+  A_RCDM_results$k
+})
+plot(log(1 / eps), num_iter)
+
+
+### sigma vs nums of iteration (strong convex) ###
+set.seed(100)
+N = 100
+kappa = seq(1, 30, length.out = N)
+num_iter = sapply(kappa, function(kappa){
+  m = 100
+  n = 50
+  k = kappa
+  
+  u = randortho(m)  
+  v = randortho(n)
+  s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
+  s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
+  
+  A = u%*%s_c%*%v  
+  
+  xs  = ones(n, 1)
+  b = A%*%xs + 1 / (1 * 1000) * rnorm(m)
+  
+  A_RCDM_results = A_RCDM(A, b, xs, alpha = 1, Sigma = rep(1, n), tol = 0.01)
+  A_RCDM_results$k
+})
+
+plot(sqrt(kappa), num_iter)
 
 
 
