@@ -320,7 +320,7 @@ n = 150
 k = 30
 data1 = Quad_generator(m = m, n = n, k = k)
 
-N = 50
+N = 100
 eps = seq(0.005, 0.1, length.out = N)
 num_iter = sapply(eps, function(eps){
   A_RCDM_results = A_RCDM(data1$A, data1$b, data1$xs, alpha = 1, Sigma = rep(1, n), tol = eps)
