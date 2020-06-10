@@ -29,7 +29,8 @@ Quad_generator <- function(m = 100, n = 50, k = 30){
   
   #xs = rnorm(n)
   xs  = ones(n, 1)
-  b = A%*%xs + 1 / (1 * 500) * rnorm(m)
+  #b = A%*%xs + 1 / (1 * 500) * rnorm(m)
+  b= A%*%xs 
   # solve(t(A) %*% A, t(A) %*% b)
   # t(A) %*% A 
   return(list(A = A, xs = xs, b = b, n = n, m = m ))
@@ -59,7 +60,8 @@ Quad_sparse_generator <- function(m = 100, n = 50, k = 30, s = 30){
   
   xs  = zeros(n, 1)
   xs[1:s,] = 1
-  b = A%*%xs + 1 / (1 * 500) * rnorm(m)
+  #b = A%*%xs + 1 / (1 * 5000) * rnorm(m)
+  b= A%*%xs
   return(list(A = A, xs = xs, b = b, n = n, m = m ))
   
 }
@@ -69,7 +71,7 @@ m = 100
 n = 50
 k = 30
 tol = -5
-maxIter = 1000
+maxIter = 3000
 
 data1 = Quad_generator(m = m, n = n, k = k)
 t1 = Sys.time()
@@ -100,12 +102,12 @@ GD.gap = GD_results$fx
 
 color <- c("RCDM" = "red", "A_RCDM" = "black", "GD" = "blue")
 gg <- ggplot() + 
-  geom_line(aes(x = 1:length(RCDM.gap), y = RCDM.gap, color = "RCDM"), size = 0.5)  + 
-  geom_line(aes(x = 1:length(A_RCDM.gap),y  = A_RCDM.gap, color = "A_RCDM"), size = 0.5) +
-  geom_line(aes(x = 1:length(GD.gap),y  = GD.gap, color = "GD"), size = 0.5) +
+  geom_line(aes(x = 1:length(RCDM.gap), y = log(abs(RCDM.gap)), color = "RCDM"), size = 0.5)  + 
+  geom_line(aes(x = 1:length(A_RCDM.gap),y  = log(abs(A_RCDM.gap)), color = "A_RCDM"), size = 0.5) +
+  geom_line(aes(x = 1:length(GD.gap),y  = log(abs(GD.gap)), color = "GD"), size = 0.5) +
   xlab("nums of iteration") + 
   ylab("optimality gap") + 
-  labs(title = "optimality gap VS iteration ", color = "Legend") +
+  labs(title = "optimality gap VS iteration(k = 30)", color = "Legend") +
   theme(plot.title = element_text(hjust = 0.5, size = 15)) + 
   scale_color_manual(values = color)
 
