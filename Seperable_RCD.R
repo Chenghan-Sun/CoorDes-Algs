@@ -1,4 +1,9 @@
+# This .R code file consists of:
+  # Algorithm 2: Seperable Coordinate Descent Algorithm
+  # for solving quadratic form objective function with L1 penalty(LASSO)
 
+# Arthurs: STA 243 Final Project Group Members:
+# Han Chen, Ninghui Li, Chenghan Sun
 
 ##### seperable CD #####
 
@@ -34,11 +39,11 @@ SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL,
     return(fun_val)
   }
   
-  fx = c(quadratic_obj(xk, b))
   fstar  =  quadratic_obj(xs, b)
+  fx = c(quadratic_obj(xk, b) - fstar)
   error = c()
   
-  while (fx[k] - fstar >= tol) {
+  while (fx[k] >= tol) {
     # update the gradient
     u = A%*%xk - b
     A1 = t(A)
@@ -65,7 +70,7 @@ SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL,
     
     if (mod(k, 1000) == 0) {
       #print(c(paste("step", k),paste("error", cr[k+1]) ))
-      print(c(paste("step", k), paste("error", fx[k] - fstar) ))
+      #print(c(paste("step", k), paste("error", fx[k] - fstar) ))
       #print(gd[iter_k])
       #print(xk)
       #print(z_k)
@@ -73,7 +78,7 @@ SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL,
     }
     
     # update error 
-    fx = c(fx, quadratic_obj(xk, b))
+    fx = c(fx, quadratic_obj(xk, b) - fstar)
     error = c(error, norm((xk - xs), "2"))
     
     # update k
@@ -87,158 +92,7 @@ SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL,
       break
     }
   }
-  print(xk)
   return(list(k = k, cr = cr, error = error, fx = fx ))
 }
-
-
-#####  Experiment  #####
-
-# input sparse data points, here xs is the true solution that we want to find
-m = 100
-n = 50
-k = 50
-s = 30
-
-
-u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
-v = randortho(n)
-
-#s_c_diag = runif(min(m, n), min= 1 / sqrt(k), max = 1)
-s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
-s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
-
-# sigular value decomposition
-A = u%*%s_c%*%v  # for convexity assumption
-
-#xs = rnorm(n)
-xs  = zeros(n, 1)
-xs[1:s,] = 1
-b = A %*% xs 
-#solve(t(A) %*% A, t(A) %*% b)
-# t(A) %*% A 
-
-SpCD_results = SpCD(A, b, xs, lambda = 0.01, alpha = 1, tol = 0.0001)
-#RCDM_results = RCDM(A, b, xs, alpha = 1, tol = 0.005)
-SpCD_results$k
-#RCDM_results$k
-
-plot(SpCD_results$fx)
-#plot(RCDM_results$fx)
-
-
-### gap vs iteration ###
-plot(SpCD_results$cr)
-
-
-
-
-### eps vs nums of iteration  (strong convex) ###
-set.seed(300)
-m = 100
-n = 50
-k = 50
-s = 30
-
-u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
-v = randortho(n)
-
-#s_c_diag = runif(min(m, n), min= 1 / sqrt(k), max = 1)
-s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
-s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
-
-# sigular value decomposition
-A = u%*%s_c%*%v  # for convexity assumption
-
-xs  = zeros(n, 1)
-xs[1:s,] = 1
-b = A %*% xs 
-
-#produce eps with length N
-N = 100
-eps = seq(0.005, 0.1, length.out = N)
-num_iter = sapply(eps, function(eps){
-  SpCD_results = SpCD(A, b, xs, lambda = 0.01, alpha = 1, tol = eps)
-  SpCD_results$k
-})
-plot(log(1 / eps), num_iter)
-
-
-
-
-
-### sigma vs nums of iteration (strong convex) ### 
-set.seed(100)
-N = 100
-kappa = seq(1, 30, length.out = N)
-num_iter = sapply(kappa, function(kappa){
-  m = 100
-  n = 50
-  k = kappa
-  s = 30
-  
-  
-  u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
-  v = randortho(n)
-  
-  #s_c_diag = runif(min(m, n), min= 1 / sqrt(k), max = 1)
-  s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
-  s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
-  
-  # sigular value decomposition
-  A = u%*%s_c%*%v  # for convexity assumption
-  
-  #xs = rnorm(n)
-  xs  = zeros(n, 1)
-  xs[1:s,] = 1
-  b = A %*% xs 
-  
-  SpCD_results = SpCD(A, b, xs, lambda = 0.01, alpha = 1, tol = eps)
-  SpCD_results$k
-})
-
-plot(kappa, num_iter)
-
-
-
-
-
-
-
-
-### eps vs nums of iteration  (strong convex) ###
-set.seed(300)
-m = 100
-n = 200
-k = 50
-s = 30
-
-u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
-v = randortho(n)
-
-#s_c_diag = runif(min(m, n), min= 1 / sqrt(k), max = 1)
-s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
-s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
-
-# sigular value decomposition
-A = u%*%s_c%*%v  # for convexity assumption
-
-xs  = zeros(n, 1)
-xs[1:s,] = 1
-b = A %*% xs 
-
-#produce eps with length N
-N = 100
-eps = seq(0.005, 0.1, length.out = N)
-num_iter = sapply(eps, function(eps){
-  SpCD_results = SpCD(A, b, xs, lambda = 0.01, alpha = 1, tol = eps)
-  SpCD_results$k
-})
-plot(log(1 / eps), num_iter)
-
-
-
-
-
 
 

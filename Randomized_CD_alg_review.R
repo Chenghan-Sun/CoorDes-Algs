@@ -5,14 +5,13 @@
 # Arthurs: STA 243 Final Project Group Members:
   # Han Chen, Ninghui Li, Chenghan Sun
 
-library(pracma)
 
 ##### Coordinate Descent method #####
 RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL, 
                 alpha=0.001, tol=10^-2, maxIter=10^7, rule="random") {
   # Params: 
-    # 
-  
+  # columns of A
+  n = ncol(A)
   # set k as the counter
   k = 1
   
@@ -31,8 +30,8 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
   }
   
   # initialize objective function vector
-  fx = c(quadratic_obj(A%*%xk, b))
   fstar = quadratic_obj(A%*%xs, b)  # true function value 
+  fx = c(quadratic_obj(A%*%xk, b) - fstar)
   error = c()  # initialize error vector 
   
   if (rule == "random") {
@@ -45,7 +44,7 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
   }
   
   # main loop 
-  while (abs(fx[k] - fstar) >= tol) {
+  while (fx[k] >= tol) {
     # update the gradient
     u = A%*%xk - b
     A1 = t(A)
@@ -57,15 +56,15 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
     # update criterion cr
     cr[k+1] = norm(xk-xs, "2") / norm(xs, "2")
     
-    if (mod(k, 1000) == 0) {
-      print(c(paste("step", k), paste("error", cr[k+1])))
-    }
+    # if (mod(k, 1000) == 0) {
+    #   print(c(paste("step", k), paste("error", cr[k+1])))
+    # }
     
     # update k
     k = k+1
     
     # update estimated function value and error 
-    fx = c(fx, quadratic_obj(A%*%xk, b))
+    fx = c(fx, quadratic_obj(A%*%xk, b) - fstar)
     error = c(error, norm((xk - xs), "2"))
     
     # update iter_k based on random / cyclic rules
@@ -84,117 +83,79 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
   return(list(k = k, cr = cr, error = error, fx = fx))
 }
 
-### Experiment ### 
-# input data points, here xs is the true solution that we want to find
-m = 100
-n = 50
-k = 30
 
 
-u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
-v = randortho(n)
 
-#s_c_diag = runif(min(m, n), min= 1 / sqrt(k), max = 1)
-s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
-s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
+#### Gradient Descent ####
 
-# sigular value decomposition
-A = u%*%s_c%*%v  # for convexity assumption
-
-#xs = rnorm(n)
-xs  = ones(n, 1)
-b = A%*%xs + 1 / (1 * 1000) * rnorm(m)
-# solve(t(A) %*% A, t(A) %*% b)
-# t(A) %*% A 
-
-RCDM_results = RCDM(A, b, xs, alpha = 1, tol = 0.005)
-RCDM_results$k
-
-### gap vs iteration ###
-plot(RCDM_results$cr)
-
-### eps vs nums of iteration ###
-set.seed(100)
-m = 100
-n = 50
-k = 30
-
-
-u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
-v = randortho(n)
-
-s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
-s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
-
-# sigular value decomposition
-A = u%*%s_c%*%v  # for convexity assumption
-
-#xs = rnorm(n)
-xs  = ones(n, 1)
-b = A%*%xs + 1 / (1 * 1000) * rnorm(m)
-
-N = 100
-eps = seq(0.005, 0.1, length.out = N)
-num_iter = sapply(eps, function(eps){
-  RCDM_results = RCDM(A, b, xs, alpha = 1, tol = eps)
-  RCDM_results$k
-})
-plot(log(1 / eps), num_iter)
-
-### sigma vs nums of iteration ###
-set.seed(100)
-N = 100
-kappa = seq(1, 30, length.out = N)
-num_iter = sapply(kappa, function(kappa){
-  m = 100
-  n = 50
-  k = kappa
-
-  u = randortho(m)  
-  v = randortho(n)
-  s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
-  s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
+GD = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL, 
+                alpha=0.001, tol=10^-2, maxIter=10^7, rule="random") {
+  # Params: 
+  # columns of A
+  n = ncol(A)
+  # set k as the counter
+  k = 1
+  # denote cr = norm(xk-xs)/norm(xs) as the a criterion
+  cr = c(1)
   
-  A = u%*%s_c%*%v  
+  # initialize xk as the estimates' vector 
+  if (is.null(xk)){
+    xk = zeros(n, 1)
+  }
   
-  xs  = ones(n, 1)
-  b = A%*%xs + 1 / (1 * 1000) * rnorm(m)
+  # Define the objective function
+  quadratic_obj = function(y, yhat){
+    fun_val = 0.5*norm((y - yhat), "2")^2
+    return(fun_val)
+  }
   
-  RCDM_results = RCDM(A, b, xs, alpha = 1, tol = 0.01)
-  RCDM_results$k
-})
-plot(kappa, num_iter)
+  # initialize objective function vector
+  fstar = quadratic_obj(A%*%xs, b)  # true function value 
+  fx = c(quadratic_obj(A%*%xk, b) - fstar)
+  error = c()  # initialize error vector 
+  
+  if (rule == "random") {
+    iter_k = sample(ncol(A), 1)
+  } else if (rule == "cyclic") {
+    iter_k = 1
+  } else {
+    print(paste("Need to specify variants of CD method."))
+    break
+  }
+  
+  # main loop 
+  while ( fx[k] >= tol) {
+    # update the gradient
+    u = A%*%xk - b
+    gd_k = t(A)%*%u
+    
+    # update xk
+    xk = xk - alpha * gd_k
 
+    # update criterion cr
+    cr[k+1] = norm(xk-xs, "2") / norm(xs, "2")
+    
+    # if (mod(k, 1000) == 0) {
+    #   print(c(paste("step", k), paste("error", cr[k+1])))
+    # }
+    
+    # update k
+    k = k+1
+    
+    # update estimated function value and error 
+    fx = c(fx, quadratic_obj(A%*%xk, b) - fstar)
+    error = c(error, norm((xk - xs), "2"))
+    
 
-
-### eps vs nums of iteration(convex) ###
-set.seed(100)
-m = 100
-n = 200
-k = 30
-
-
-u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
-v = randortho(n)
-
-s_c_diag  = seq(from = 1 / sqrt(k), to = 1, length.out = min(m, n))
-s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
-
-# sigular value decomposition
-A = u%*%s_c%*%v  # for convexity assumption
-
-#xs = rnorm(n)
-xs  = ones(n, 1)
-b = A%*%xs + 1 / (1 * 1000) * rnorm(m)
-
-N = 100
-eps = seq(0.005, 0.1, length.out = N)
-num_iter = sapply(eps, function(eps){
-  RCDM_results = RCDM(A, b, xs, alpha = 1, tol = eps)
-  RCDM_results$k
-})
-
-plot(1 / eps, num_iter)
+    
+    # set algorithm iter bound 
+    if (k > maxIter) {
+      print(paste("Algorithm unfinished by reaching the maximum iterations."))
+      break
+    }
+  }
+  return(list(k = k, cr = cr, error = error, fx = fx))
+}
 
 
 

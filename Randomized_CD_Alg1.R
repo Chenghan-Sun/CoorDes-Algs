@@ -5,48 +5,8 @@
   # Han Chen, Ninghui Li, Chenghan Sun
 
 library(pracma)
-# Simulation dataset
-# input data points, here xs is the true solution that we want to find
-m = 300
-n = 500
-s = 2
 
-u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
-v = randortho(n)
-
-s_c_diag = runif(min(m, n), min=30, max=50)
-s_c_diag[271:300] = 0
-s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
-
-# sigular value decomposition
-A = u%*%s_c%*%v  # for convexity assumption
-
-xs = zeros(n, 1)
-picks = randperm(n)
-xs[picks[1:s]] = 100*randn(s, 1)
-b = A%*%xs
-
-# Define the objective function
-quadratic_obj = function(y, yhat){
-  fun_val = 0.5*norm((y - yhat), "2")^2
-  return(fun_val)
-}
-
-# Experiment Setup
-
-# initialize fixed CGD step size alpha
-alpha = 0.001
-
-# CGD method terminates when norm(xk-xs)/norm(xs) smaller than given epsi = 10^-3
-# denote norm(xk-xs)/norm(xs) = cr (criterion)
-# set k as the counter
-k = 1
-cr = c(1)
-
-# Initialize index iter_k (apply for both cyclic and randomized rules)
-iter_k = 1 
-
-# Coordinate Descent method
+### Coordinate Descent method ###
 RCDM = function(A, b, xk, xs, cr, iter_k, 
                 alpha=0.001, tol=10^-2, maxIter=10^7, rule="cyclic") {
   
@@ -93,13 +53,41 @@ RCDM = function(A, b, xk, xs, cr, iter_k,
       break
     }
   }
-  return(list(k, cr, error))
+  return(list(k = k, cr = cr, error = error, xk = xk))
 }
 
-RCDM_results = RCDM(A, b, xk, xs, cr, iter_k)
+
+
+### Experiment ### 
+# input data points, here xs is the true solution that we want to find
+m = 300
+n = 100
+k = 5
+
+
+u = randortho(m)  # Generates random orthonormal or unitary matrix of size m
+v = randortho(n)
+
+s_c_diag = runif(min(m, n), min= 1 / sqrt(k), max = 1)
+s_c = diag(s_c_diag, nrow=m, ncol=n)  # for convexity assumption 
+
+# sigular value decomposition
+A = u%*%s_c%*%v  # for convexity assumption
+
+xs = rnorm(n)
+b = A%*%xs + 1 / (k) * rnorm(m)
+
+xs = zeros(n, 1)
+picks = randperm(n)
+xs[picks[1:s]] = 100*randn(s, 1)
+b = A%*%xs + 5 * rnorm(m)
 
 
 
+RCDM_results = RCDM(A, b, xk, xs, cr, iter_k, alpha = 1 / 1000)
+
+beta_hat = RCDM_results$xk
+norm(beta_hat - xs, "2")
 
 
 
