@@ -1,7 +1,20 @@
-### Experiment ### 
+# This .R code file consists of:
+  # 1. Algorithms Convergence Analysis and plots
+  # 2. Algorithms Complexity Analysis and plots
+# For: 
+  # 1. Algorithm 1: Randomized Coordinate Descent method
+  # 2. Algorithm 2: Accelerated Randomized Coordinate Descent (Nesterov 2012)
+  # 3. Algorithm 3: Seperable Coordinate Descent Algorithm
+# Under:
+  # 1. Strong convexity assumption 
+  # 2. Convexity assumption 
+
+# Arthurs: STA 243 Final Project Group Members:
+  # Han Chen, Ninghui Li, Chenghan Sun
+
+
 library(pracma)
 library(ggplot2)
-
 
 # load all algorithms from codebase 
 setwd("/Users/furinkazan/Box/STA_243/CoorDes-Algs/codebase/")  # please set your current directory path 
@@ -136,7 +149,7 @@ n = 50
 k = 30
 data1 = Quad_generator(m = m, n = n, k = k)
 
-N = 100
+N = 500
 #eps = seq(0.005, 0.1, length.out = N)
 eps = exp(-seq(1, 3, length.out = N))
 num_iter = sapply(eps, function(eps){
@@ -159,7 +172,7 @@ ggplot() +
 ### (1/sigma) vs nums of iteration (strong convex)###
 set.seed(100)
 N = 500
-kappa = seq(1, 300, length.out = N)
+kappa = seq(1, 30, length.out = N)
 num_iter = sapply(kappa, function(kappa){
   m = 100
   n = 50
@@ -173,7 +186,9 @@ ggplot() +
   geom_point(aes(x = kappa, y = num_iter)) + 
   geom_smooth( method = "lm", aes(x = kappa, y = num_iter), show.legend = TRUE)  + 
   xlab(expression(frac(1,sigma))) + 
-  ylab("numbers of iteration")
+  ylab("numbers of iteration") + 
+  labs(title = "Sigma complexity for RCDM under strong convexity assumption") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
@@ -197,7 +212,9 @@ ggplot() +
   geom_point(aes(x = 1 / eps, y = num_iter)) + 
   geom_smooth( method = "lm", aes(x = 1 / eps, y = num_iter), show.legend = TRUE)  + 
   xlab(expression(frac(1,epsilon))) + 
-  ylab("numbers of iteration")
+  ylab("numbers of iteration") + 
+  labs(title = "Epsilon complexity for RCDM under convexity assumption") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
@@ -237,18 +254,20 @@ num_iter = sapply(eps, function(eps){
   SpCD_results = SpCD(data2$A, data2$b, data2$xs, lambda = 0.01, alpha = 1, tol = eps)
   SpCD_results$k
 })
-plot(log(1 / eps), num_iter)
+# plot(log(1 / eps), num_iter)
 
 ggplot() + 
   geom_point(aes(x = log(1 / eps), y = num_iter)) + 
   geom_smooth( method = "lm", aes(x = log(1 / eps), y = num_iter), show.legend = TRUE)  + 
   xlab(expression(log(1 / epsilon))) + 
-  ylab("numbers of iteration")
+  ylab("numbers of iteration") + 
+  labs(title = "Epsilon complexity for SCDM under strong convexity assumption") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
 ### sigma vs nums of iteration (strong convex) ### 
-set.seed(100)
+set.seed(300)
 N = 500
 kappa = seq(1, 300, length.out = N)
 num_iter = sapply(kappa, function(kappa){
@@ -262,12 +281,13 @@ num_iter = sapply(kappa, function(kappa){
   SpCD_results$k
 })
 
-
 ggplot() + 
   geom_point(aes(x = kappa, y = num_iter)) + 
   geom_smooth( method = "lm", aes(x = kappa, y = num_iter), show.legend = TRUE)  + 
   xlab(expression(frac(1,sigma))) + 
-  ylab("numbers of iteration")
+  ylab("numbers of iteration") + 
+  labs(title = "Sigma complexity for SCDM under strong convexity assumption") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 ### eps vs nums of iteration  (convex) ###
@@ -285,7 +305,15 @@ num_iter = sapply(eps, function(eps){
   SpCD_results = SpCD(data2$A, data2$b, data2$xs, lambda = 0.01, alpha = 1, tol = eps)
   SpCD_results$k
 })
-plot(log(1 / eps), num_iter)
+# plot(log(1 / eps), num_iter)
+
+ggplot() + 
+  geom_point(aes(x = log(1 / eps), y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = log(1 / eps), y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(log(frac(1,epsilon)))) + 
+  ylab("numbers of iteration") +
+  labs(title = "Epsilon complexity for SCDM under convexity assumption") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
@@ -383,6 +411,4 @@ ggplot() +
   ylab("numbers of iteration") +
   labs(title = "Epsilon complexity for ACDM under convexity assumption") + 
   theme(plot.title = element_text(hjust = 0.5))
-
-
 
