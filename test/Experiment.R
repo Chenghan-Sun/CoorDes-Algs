@@ -136,7 +136,7 @@ n = 50
 k = 30
 data1 = Quad_generator(m = m, n = n, k = k)
 
-N = 500
+N = 100
 #eps = seq(0.005, 0.1, length.out = N)
 eps = exp(-seq(1, 3, length.out = N))
 num_iter = sapply(eps, function(eps){
@@ -144,13 +144,15 @@ num_iter = sapply(eps, function(eps){
   RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = eps)
   RCDM_results$k
 })
-plot(log(1 / eps), num_iter)
+# plot(log(1 / eps), num_iter)
 
 ggplot() + 
   geom_point(aes(x = log(1 / eps), y = num_iter)) + 
   geom_smooth( method = "lm", aes(x = log(1 / eps), y = num_iter), show.legend = TRUE)  + 
   xlab(expression(log(1 / epsilon))) + 
-  ylab("numbers of iteration")
+  ylab("numbers of iteration") +
+  labs(title = "Epsilon complexity for RCDM under strong convexity assumption") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
@@ -199,6 +201,7 @@ ggplot() +
 
 
 
+
 ########## Seperable_RCD ###########
 
 ###  Experiment  ###
@@ -216,8 +219,6 @@ plot(SpCD_results$fx)
 
 ### gap vs iteration ###
 plot(SpCD_results$cr)
-
-
 
 
 ### eps vs nums of iteration  (strong convex) ###
@@ -257,8 +258,6 @@ num_iter = sapply(kappa, function(kappa){
 plot(kappa, num_iter)
 
 
-
-
 ### eps vs nums of iteration  (convex) ###
 set.seed(300)
 m = 100
@@ -275,6 +274,7 @@ num_iter = sapply(eps, function(eps){
   SpCD_results$k
 })
 plot(log(1 / eps), num_iter)
+
 
 
 
@@ -351,7 +351,7 @@ ggplot() +
 set.seed(100)
 m = 100
 n = 150
-k = 1000
+k = 10000
 data1 = Quad_generator(m = m, n = n, k = k)
 
 N = 100
