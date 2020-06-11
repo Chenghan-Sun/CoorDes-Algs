@@ -1,13 +1,12 @@
 # This .R code file consists of:
-  # Algorithm 3: Accelerated Randomized Coordinate Descent (Nesterov 2012)
+  # Algorithm 2: Accelerated Randomized Coordinate Descent (Nesterov 2012)
   # for solving quadratic form objective function
 
 # Arthurs: STA 243 Final Project Group Members:
   # Han Chen, Ninghui Li, Chenghan Sun
 
 
-
-# Coordinate Descent method
+# Accelerated Randomized Coordinate Descent Method
 A_RCDM = function(A, b, xs, alpha = 1, Sigma = NULL, xk = NULL, iter_k = NULL, 
                    gamma_k=0, tol=10^-2, maxIter=10^7) {
   ### Solve quadratic form functions min_x f(x) = (Ax - b) ^ 2  ###
@@ -123,7 +122,4 @@ A_RCDM = function(A, b, xs, alpha = 1, Sigma = NULL, xk = NULL, iter_k = NULL,
   }
   return(list(k = k, cr = cr, error = error, fx = fx, xk = xk))
 }
-
-
-
 

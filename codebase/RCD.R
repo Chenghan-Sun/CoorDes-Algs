@@ -1,15 +1,23 @@
 # This .R code file consists of:
-  # Algorithm 1: Coordinate Descent method with randomized / cyclic rules and fixed step size 
-  # for solving quadratic form objective function
+  # 1. RCDM (Algorithm 1): Coordinate Descent method with randomized / cyclic rules and fixed step size 
+    # for solving quadratic form objective function
+  # 2. Gradient Descent as baseline model
 
 # Arthurs: STA 243 Final Project Group Members:
   # Han Chen, Ninghui Li, Chenghan Sun
 
 
-##### Coordinate Descent method #####
+#####Randomized Coordinate Descent Method #####
 RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL, 
                 alpha=0.001, tol=10^-2, maxIter=10^7, rule="random") {
-  # Params: 
+  # Params:
+    # A the input matrix, b vector, xs the true parameters
+    # xk: initial value of the optimization problem 
+    # iter_k: variants index of RCD method
+    # alpha: fixed step size
+    # tol: tolerance, maxIter: maximum iteration
+    # rule: variants rule for iter_k, random or cyclic
+
   # columns of A
   n = ncol(A)
   # set k as the counter
@@ -56,9 +64,9 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
     # update criterion cr
     cr[k+1] = norm(xk-xs, "2") / norm(xs, "2")
     
-    # if (mod(k, 1000) == 0) {
-    #   print(c(paste("step", k), paste("error", cr[k+1])))
-    # }
+    #if (mod(k, 1000) == 0) {
+    #  print(c(paste("step", k), paste("error", cr[k+1])))
+    #}
     
     # update k
     k = k+1
@@ -88,9 +96,13 @@ RCDM = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
 
 #### Gradient Descent ####
 
-GD = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL, 
-                alpha=0.001, tol=10^-2, maxIter=10^7, rule="random") {
-  # Params: 
+GD = function(A, b, xs, xk = NULL, cr = NULL, alpha=0.001, tol=10^-2, maxIter=10^7) {
+  # Params:
+    # A the input matrix, b vector, xs the true parameters
+    # xk: initial value of the optimization problem 
+    # alpha: fixed step size
+    # tol: tolerance, maxIter: maximum iteration
+  
   # columns of A
   n = ncol(A)
   # set k as the counter
@@ -113,15 +125,6 @@ GD = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
   fstar = quadratic_obj(A%*%xs, b)  # true function value 
   fx = c(quadratic_obj(A%*%xk, b) - fstar)
   error = c()  # initialize error vector 
-  
-  if (rule == "random") {
-    iter_k = sample(ncol(A), 1)
-  } else if (rule == "cyclic") {
-    iter_k = 1
-  } else {
-    print(paste("Need to specify variants of CD method."))
-    break
-  }
   
   # main loop 
   while ( fx[k] >= tol) {
@@ -146,8 +149,6 @@ GD = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
     fx = c(fx, quadratic_obj(A%*%xk, b) - fstar)
     error = c(error, norm((xk - xs), "2"))
     
-
-    
     # set algorithm iter bound 
     if (k > maxIter) {
       print(paste("Algorithm unfinished by reaching the maximum iterations."))
@@ -156,6 +157,4 @@ GD = function(A, b, xs, xk = NULL, cr = NULL, iter_k = NULL,
   }
   return(list(k = k, cr = cr, error = error, fx = fx))
 }
-
-
 

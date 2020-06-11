@@ -1,11 +1,11 @@
 # This .R code file consists of:
-  # Algorithm 2: Seperable Coordinate Descent Algorithm
+  # Algorithm 3: Seperable Coordinate Descent Algorithm
   # for solving quadratic form objective function with L1 penalty(LASSO)
 
 # Arthurs: STA 243 Final Project Group Members:
-# Han Chen, Ninghui Li, Chenghan Sun
+  # Han Chen, Ninghui Li, Chenghan Sun
 
-##### seperable CD #####
+##### Seperable Coordinate Descent Method#####
 
 SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL, 
                  alpha = 0.001, tol = 1e-2, maxIter = 1e7){
@@ -68,14 +68,14 @@ SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL,
     # update stopping criterion 
     cr[k+1] = norm(xk-xs, "2") / norm(xs, "2")
     
-    if (mod(k, 1000) == 0) {
+    #if (mod(k, 1000) == 0) {
       #print(c(paste("step", k),paste("error", cr[k+1]) ))
       #print(c(paste("step", k), paste("error", fx[k] - fstar) ))
       #print(gd[iter_k])
       #print(xk)
       #print(z_k)
       #print(xk)
-    }
+    #}
     
     # update error 
     fx = c(fx, quadratic_obj(xk, b) - fstar)
@@ -94,5 +94,4 @@ SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL,
   }
   return(list(k = k, cr = cr, error = error, fx = fx ))
 }
-
 
