@@ -159,7 +159,7 @@ ggplot() +
 ### (1/sigma) vs nums of iteration (strong convex)###
 set.seed(100)
 N = 500
-kappa = seq(1, 30, length.out = N)
+kappa = seq(1, 300, length.out = N)
 num_iter = sapply(kappa, function(kappa){
   m = 100
   n = 50
@@ -230,32 +230,44 @@ s = 30
 data2 = Quad_sparse_generator(m = m, n = n, k = k, s=s)
 
 #produce eps with length N
-N = 100
-eps = seq(0.005, 0.1, length.out = N)
+N = 500
+#eps = seq(0.005, 0.1, length.out = N)
+eps = exp(-seq(1, 3, length.out = N))
 num_iter = sapply(eps, function(eps){
   SpCD_results = SpCD(data2$A, data2$b, data2$xs, lambda = 0.01, alpha = 1, tol = eps)
   SpCD_results$k
 })
 plot(log(1 / eps), num_iter)
 
+ggplot() + 
+  geom_point(aes(x = log(1 / eps), y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = log(1 / eps), y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(log(1 / epsilon))) + 
+  ylab("numbers of iteration")
+
 
 
 ### sigma vs nums of iteration (strong convex) ### 
 set.seed(100)
-N = 100
-kappa = seq(1, 30, length.out = N)
+N = 500
+kappa = seq(1, 300, length.out = N)
 num_iter = sapply(kappa, function(kappa){
   m = 100
   n = 50
   k = kappa
-  s = 30
-  
+  s = 10
+  tol = 0.001
   data2 = Quad_sparse_generator(m = m, n = n, k = k, s=s)
-  SpCD_results = SpCD(data2$A, data2$b, data2$xs, lambda = 0.01, alpha = 1, tol = eps)
+  SpCD_results = SpCD(data2$A, data2$b, data2$xs, lambda = 0.01, alpha = 1, tol = tol)
   SpCD_results$k
 })
 
-plot(kappa, num_iter)
+
+ggplot() + 
+  geom_point(aes(x = kappa, y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = kappa, y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(frac(1,sigma))) + 
+  ylab("numbers of iteration")
 
 
 ### eps vs nums of iteration  (convex) ###
