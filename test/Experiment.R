@@ -3,7 +3,9 @@ library(pracma)
 library(ggplot2)
 
 
-source("Randomized_CD_alg_review.R")
+# load all algorithms from codebase 
+setwd("/Users/furinkazan/Box/STA_243/CoorDes-Algs/codebase/")  # please set your current directory path 
+source("RCD.R")
 source("Seperable_RCD.R")
 source("Accelerated_RCD.R")
 Quad_generator <- function(m = 100, n = 50, k = 30){
@@ -66,12 +68,13 @@ Quad_sparse_generator <- function(m = 100, n = 50, k = 30, s = 30){
   
 }
 
+########## Experiments on Convergence Analysis #############
 ######### general comparision ##########
 m = 100 
 n = 50
-k = 30
+k = 1000
 tol = -5
-maxIter = 3000
+maxIter = 100000
 
 data1 = Quad_generator(m = m, n = n, k = k)
 t1 = Sys.time()
@@ -79,7 +82,7 @@ RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = tol, maxIter = 
 t2 = Sys.time()
 RCDM.t = t2 - t1
 RCDM_results$k
-RCDM.gap = RCDM_results$fx 
+RCDM.gap = RCDM_results$fx
 #plot(RCDM.gap)
 
 t1 = Sys.time()
@@ -106,8 +109,8 @@ gg <- ggplot() +
   geom_line(aes(x = 1:length(A_RCDM.gap),y  = log(abs(A_RCDM.gap)), color = "A_RCDM"), size = 0.5) +
   geom_line(aes(x = 1:length(GD.gap),y  = log(abs(GD.gap)), color = "GD"), size = 0.5) +
   xlab("nums of iteration") + 
-  ylab("optimality gap") + 
-  labs(title = "optimality gap VS iteration(k = 30)", color = "Legend") +
+  ylab("log of optimality gap") + 
+  labs(title = "Optimality gap VS iteration (k = 1000)", color = "Legend") +
   theme(plot.title = element_text(hjust = 0.5, size = 15)) + 
   scale_color_manual(values = color)
 
@@ -116,9 +119,8 @@ show(gg)
 
 
 
-
-########## randomized_CD_alg #############
-### Experiment ### 
+########## Experiments on Complexity Analysis #############
+########## randomized_CD #############
 #strongly convex setting 
 data1 = Quad_generator(m = 100, n = 50, k = 30)
 RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = 0.005)
@@ -127,54 +129,73 @@ RCDM_results$k
 ### gap vs iteration ###
 plot(RCDM_results$cr)
 
-### eps vs nums of iteration (strong convex)###
+### log(1/eps) vs nums of iteration (strongly convex)###
 set.seed(100)
 m = 100
 n = 50
 k = 30
 data1 = Quad_generator(m = m, n = n, k = k)
 
-N = 100
-eps = seq(0.005, 0.1, length.out = N)
+N = 500
+#eps = seq(0.005, 0.1, length.out = N)
+eps = exp(-seq(1, 3, length.out = N))
 num_iter = sapply(eps, function(eps){
+  # print(eps)
   RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = eps)
   RCDM_results$k
 })
 plot(log(1 / eps), num_iter)
 
-### sigma vs nums of iteration (strong convex)###
+ggplot() + 
+  geom_point(aes(x = log(1 / eps), y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = log(1 / eps), y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(log(1 / epsilon))) + 
+  ylab("numbers of iteration")
+
+
+
+### (1/sigma) vs nums of iteration (strong convex)###
 set.seed(100)
-N = 100
+N = 500
 kappa = seq(1, 30, length.out = N)
 num_iter = sapply(kappa, function(kappa){
   m = 100
   n = 50
   k = kappa
   data1 = Quad_generator(m = m, n = n, k = k)
-  RCDM_results = RCDM(A, b, xs, alpha = 1, tol = 0.01)
+  RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = 0.01)
   RCDM_results$k
 })
 
-plot(kappa, num_iter)
+ggplot() + 
+  geom_point(aes(x = kappa, y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = kappa, y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(frac(1,sigma))) + 
+  ylab("numbers of iteration")
 
 
 
-### eps vs nums of iteration(convex) ###
+### (1/eps) vs nums of iteration(convex) ###
 set.seed(100)
 m = 100
-n = 200
-k = 30
+n = 50
+k = 100000
 data1 = Quad_generator(m = m, n = n, k = k)
 
-N = 100
-eps = seq(0.005, 0.1, length.out = N)
+N = 500
+#eps = seq(0.005, 0.1, length.out = N)
+eps = 1 / seq(10, 1000, length.out = N)
 num_iter = sapply(eps, function(eps){
   RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = eps)
   RCDM_results$k
 })
-
 plot(1 / eps, num_iter)
 
+ggplot() + 
+  geom_point(aes(x = 1 / eps, y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = 1 / eps, y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(frac(1,epsilon))) + 
+  ylab("numbers of iteration")
 
 
 
@@ -207,7 +228,6 @@ k = 50
 s = 30
 data2 = Quad_sparse_generator(m = m, n = n, k = k, s=s)
 
-
 #produce eps with length N
 N = 100
 eps = seq(0.005, 0.1, length.out = N)
@@ -239,10 +259,6 @@ plot(kappa, num_iter)
 
 
 
-
-
-
-
 ### eps vs nums of iteration  (convex) ###
 set.seed(300)
 m = 100
@@ -250,8 +266,6 @@ n = 200
 k = 50
 s = 30
 data2 = Quad_sparse_generator(m = m, n = n, k = k, s=s)
-
-
 
 #produce eps with length N
 N = 100
@@ -261,6 +275,7 @@ num_iter = sapply(eps, function(eps){
   SpCD_results$k
 })
 plot(log(1 / eps), num_iter)
+
 
 
 
@@ -289,29 +304,46 @@ k = 30
 data1 = Quad_generator(m = m, n = n, k = k)
 
 N = 100
-eps = seq(0.005, 0.1, length.out = N)
+# eps = seq(0.005, 0.1, length.out = N)
+eps = exp(-seq(1, 3, length.out = N))
 num_iter = sapply(eps, function(eps){
   A_RCDM_results = A_RCDM(data1$A, data1$b, data1$xs, alpha = 1, Sigma = rep(1, n), tol = eps)
   A_RCDM_results$k
 })
-plot(log(1 / eps), num_iter)
+# plot(log(1 / eps), num_iter)
+
+ggplot() + 
+  geom_point(aes(x = log(1 / eps), y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = log(1 / eps), y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(log(1 / epsilon))) + 
+  ylab("numbers of iteration") + 
+  labs(title = "Epsilon complexity for ACDM under strong convexity assumption") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
 
 
 ### sigma vs nums of iteration (strong convex) ###
 set.seed(100)
-N = 50
+N = 100
 kappa = seq(1, 30, length.out = N)
 num_iter = sapply(kappa, function(kappa){
   m = 100
   n = 50
   k = kappa
   data1 = Quad_generator(m = m, n = n, k = k)
-  
   A_RCDM_results = A_RCDM(data1$A, data1$b, data1$xs, alpha = 1, Sigma = rep(1, n), tol = 0.01)
   A_RCDM_results$k
 })
 
-plot(kappa, num_iter)
+# plot(kappa, num_iter)
+ggplot() + 
+  geom_point(aes(x = sqrt(kappa)*log(1/kappa), y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = sqrt(kappa)*log(1/kappa), y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(sqrt(frac(1, sigma))*log(sigma))) + 
+  ylab("numbers of iteration") + 
+  labs(title = "Sigma complexity for ACDM under strong convexity assumption") +
+  theme(plot.title = element_text(hjust = 0.5))
+
 
 
 
@@ -319,18 +351,26 @@ plot(kappa, num_iter)
 set.seed(100)
 m = 100
 n = 150
-k = 30
+k = 1000
 data1 = Quad_generator(m = m, n = n, k = k)
 
 N = 100
-eps = seq(0.005, 0.1, length.out = N)
+# eps = seq(10, 0.1, length.out = N)
+
+eps = 1 / seq(10, 1000, length.out = N)
 num_iter = sapply(eps, function(eps){
   A_RCDM_results = A_RCDM(data1$A, data1$b, data1$xs, alpha = 1, Sigma = rep(1, n), tol = eps)
   A_RCDM_results$k
 })
-plot(1 / sqrt(eps), num_iter)
+# plot(1 / sqrt(eps), num_iter)
 
-
+ggplot() + 
+  geom_point(aes(x = sqrt(1/eps), y = num_iter)) + 
+  geom_smooth( method = "lm", aes(x = sqrt(1/eps), y = num_iter), show.legend = TRUE)  + 
+  xlab(expression(sqrt(frac(1,epsilon)))) + 
+  ylab("numbers of iteration") +
+  labs(title = "Epsilon complexity for ACDM under convexity assumption") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
 
 
