@@ -4,7 +4,7 @@
 # For: 
   # 1. Algorithm 1: Randomized Coordinate Descent method
   # 2. Algorithm 2: Accelerated Randomized Coordinate Descent (Nesterov 2012)
-  # 3. Algorithm 3: Seperable Coordinate Descent Algorithm
+  # 3. Algorithm 3: Separable Coordinate Descent Algorithm
 # Under:
   # 1. Strong convexity assumption 
   # 2. Convexity assumption 
@@ -19,7 +19,7 @@ library(ggplot2)
 # load all algorithms from codebase 
 setwd("/Users/furinkazan/Box/STA_243/CoorDes-Algs/codebase/")  # please set your current directory path 
 source("RCD.R")
-source("Seperable_RCD.R")
+source("Separable_RCD.R")
 source("Accelerated_RCD.R")
 Quad_generator <- function(m = 100, n = 50, k = 30){
   ### problem set up    min_x |Ax - b|^2
