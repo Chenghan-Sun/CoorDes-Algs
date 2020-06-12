@@ -1,16 +1,16 @@
 # This .R code file consists of:
-  # Algorithm 3: Seperable Coordinate Descent Algorithm
+  # Algorithm 3: Separable Coordinate Descent Algorithm
   # for solving quadratic form objective function with L1 penalty(LASSO)
 
 # Arthurs: STA 243 Final Project Group Members:
   # Han Chen, Ninghui Li, Chenghan Sun
 
-##### Seperable Coordinate Descent Method#####
+##### Separable Coordinate Descent Method#####
 
 SpCD <- function(A, b, xs, lambda = 1, iter_k = 1, xk = NULL, cr = NULL, 
                  alpha = 0.001, tol = 1e-2, maxIter = 1e7){
   ### Solve quadratic form functions with L1 penalty min_x f(x) = (Ax - b) ^ 2 + lambda|x| ###
-  ### Algorithm: Seperable Regularised version Coordinate Descent "Richtarik, P., Takac, M.: Iteration complexity of a randomized block-coordinate descent
+  ### Algorithm: Separable Regularised version Coordinate Descent "Richtarik, P., Takac, M.: Iteration complexity of a randomized block-coordinate descent
   ### methods for minimizing a composite function"
   ### A the input matrix, b vector, xs the true parameters 
   ### lambda the tuning parameter

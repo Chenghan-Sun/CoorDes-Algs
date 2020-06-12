@@ -4,7 +4,7 @@
 # For: 
   # 1. Algorithm 1: Randomized Coordinate Descent method
   # 2. Algorithm 2: Accelerated Randomized Coordinate Descent (Nesterov 2012)
-  # 3. Algorithm 3: Seperable Coordinate Descent Algorithm
+  # 3. Algorithm 3: Separable Coordinate Descent Algorithm
 # Under:
   # 1. Strong convexity assumption 
   # 2. Convexity assumption 
