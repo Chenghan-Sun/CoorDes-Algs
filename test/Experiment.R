@@ -12,15 +12,14 @@
 # Arthurs: STA 243 Final Project Group Members:
   # Han Chen, Ninghui Li, Chenghan Sun
 
-
 library(pracma)
 library(ggplot2)
 
 # load all algorithms from codebase 
-setwd("/Users/furinkazan/Box/STA_243/CoorDes-Algs/codebase/")  # please set your current directory path 
-source("RCD.R")
-source("Seperable_RCD.R")
-source("Accelerated_RCD.R")
+#setwd("/Users/furinkazan/Box/STA_243/CoorDes-Algs/codebase/")  # please set your current directory path 
+source("../codebase/RCD.R")
+source("../codebase/Seperable_RCD.R")
+source("../codebase/Accelerated_RCD.R")
 Quad_generator <- function(m = 100, n = 50, k = 30){
   ### problem set up    min_x |Ax - b|^2
   ### if m >= n, we generate data matrix A with A^TA has conditional number k, where the largest singualr value of A is 1
@@ -82,12 +81,13 @@ Quad_sparse_generator <- function(m = 100, n = 50, k = 30, s = 30){
 }
 
 ########## Experiments on Convergence Analysis #############
-######### general comparision ##########
+########## general comparision ##########
+### Part 1 convergence rate ###
 m = 100 
 n = 50
-k = 1000
-tol = -5
-maxIter = 100000
+k = 10
+tol = 0.001
+maxIter = 50000
 
 data1 = Quad_generator(m = m, n = n, k = k)
 t1 = Sys.time()
@@ -96,7 +96,6 @@ t2 = Sys.time()
 RCDM.t = t2 - t1
 RCDM_results$k
 RCDM.gap = RCDM_results$fx
-#plot(RCDM.gap)
 
 t1 = Sys.time()
 A_RCDM_results = A_RCDM(data1$A, data1$b, data1$xs, alpha = 1, Sigma = rep(1, data1$n), tol = tol, maxIter =maxIter)
@@ -104,7 +103,6 @@ t2 = Sys.time()
 A_RCDM.t = t2 - t1 
 A_RCDM_results$k
 A_RCDM.gap = A_RCDM_results$fx
-#plot(A_RCDM.gap)
 
 t1 = Sys.time()
 GD_results = GD(data1$A, data1$b, data1$xs, alpha = 0.5, tol = tol, maxIter = maxIter)
@@ -112,7 +110,6 @@ t2 = Sys.time()
 GD.t = t2 - t1
 GD_results$k
 GD.gap = GD_results$fx 
-#plot(GD.gap)
 
 ## ggplot
 
@@ -128,6 +125,97 @@ gg <- ggplot() +
   scale_color_manual(values = color)
 
 show(gg)
+
+### Part 2 real time complexity ###
+#under some fixed tol, we test the real run time of 
+#each algorithm in different conditional number kappa
+m = 100 
+n = 50
+k = 1000
+tol = 0.001
+maxIter = 50000
+
+#kappa = 10
+N = 50
+k = 10
+result1.comp = sapply(1: N, function(o){
+  data1 = Quad_generator(m = m, n = n, k = k)
+  t1 = Sys.time()
+  RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = tol, maxIter = maxIter)
+  t2 = Sys.time()
+  RCDM.t = t2 - t1
+  RCDM.ite = RCDM_results$k
+  
+  t1 = Sys.time()
+  A_RCDM_results = A_RCDM(data1$A, data1$b, data1$xs, alpha = 1, Sigma = rep(1, data1$n), tol = tol, maxIter =maxIter)
+  t2 = Sys.time()
+  A_RCDM.t = t2 - t1 
+  A_RCDM.ite = A_RCDM_results$k
+  
+  t1 = Sys.time()
+  GD_results = GD(data1$A, data1$b, data1$xs, alpha = 0.5, tol = tol, maxIter = maxIter)
+  t2 = Sys.time()
+  GD.t = t2 - t1
+  GD.ite = GD_results$k
+  
+  return(c(RCDM.t = RCDM.t, RCDM.ite = RCDM.ite, A_RCDM.t = A_RCDM.t, A_RCDM.ite = A_RCDM.ite, GD.t = GD.t, GD.ite = GD.ite))
+})
+apply(result1.comp, 1, mean)
+
+#kappa = 100
+N = 50 
+k = 100 
+result2.comp = sapply(1: N, function(o){
+  data1 = Quad_generator(m = m, n = n, k = k)
+  t1 = Sys.time()
+  RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = tol, maxIter = maxIter)
+  t2 = Sys.time()
+  RCDM.t = t2 - t1
+  RCDM.ite = RCDM_results$k
+  
+  t1 = Sys.time()
+  A_RCDM_results = A_RCDM(data1$A, data1$b, data1$xs, alpha = 1, Sigma = rep(1, data1$n), tol = tol, maxIter =maxIter)
+  t2 = Sys.time()
+  A_RCDM.t = t2 - t1 
+  A_RCDM.ite = A_RCDM_results$k
+  
+  t1 = Sys.time()
+  GD_results = GD(data1$A, data1$b, data1$xs, alpha = 0.5, tol = tol, maxIter = maxIter)
+  t2 = Sys.time()
+  GD.t = t2 - t1
+  GD.ite = GD_results$k
+  
+  return(c(RCDM.t = RCDM.t, RCDM.ite = RCDM.ite, A_RCDM.t = A_RCDM.t, A_RCDM.ite = A_RCDM.ite, GD.t = GD.t, GD.ite = GD.ite))
+})
+apply(result2.comp, 1, mean)
+
+
+#kappa = 1000 
+N = 50 
+k = 1000
+result3.comp = sapply(1: N, function(o){
+  data1 = Quad_generator(m = m, n = n, k = k)
+  t1 = Sys.time()
+  RCDM_results = RCDM(data1$A, data1$b, data1$xs, alpha = 1, tol = tol, maxIter = maxIter)
+  t2 = Sys.time()
+  RCDM.t = t2 - t1
+  RCDM.ite = RCDM_results$k
+  
+  t1 = Sys.time()
+  A_RCDM_results = A_RCDM(data1$A, data1$b, data1$xs, alpha = 1, Sigma = rep(1, data1$n), tol = tol, maxIter =maxIter)
+  t2 = Sys.time()
+  A_RCDM.t = t2 - t1 
+  A_RCDM.ite = A_RCDM_results$k
+  
+  t1 = Sys.time()
+  GD_results = GD(data1$A, data1$b, data1$xs, alpha = 0.5, tol = tol, maxIter = maxIter)
+  t2 = Sys.time()
+  GD.t = t2 - t1
+  GD.ite = GD_results$k
+  
+  return(c(RCDM.t = RCDM.t, RCDM.ite = RCDM.ite, A_RCDM.t = A_RCDM.t, A_RCDM.ite = A_RCDM.ite, GD.t = GD.t, GD.ite = GD.ite))
+})
+apply(result3.comp, 1, mean)
 
 
 
@@ -305,7 +393,6 @@ num_iter = sapply(eps, function(eps){
   SpCD_results = SpCD(data2$A, data2$b, data2$xs, lambda = 0.01, alpha = 1, tol = eps)
   SpCD_results$k
 })
-# plot(log(1 / eps), num_iter)
 
 ggplot() + 
   geom_point(aes(x = log(1 / eps), y = num_iter)) + 
