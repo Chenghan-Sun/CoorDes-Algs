@@ -18,7 +18,7 @@ library(ggplot2)
 # load all algorithms from codebase 
 #setwd("/Users/furinkazan/Box/STA_243/CoorDes-Algs/codebase/")  # please set your current directory path 
 source("../codebase/RCD.R")
-source("../codebase/Seperable_RCD.R")
+source("../codebase/Separable_RCD.R")
 source("../codebase/Accelerated_RCD.R")
 Quad_generator <- function(m = 100, n = 50, k = 30){
   ### problem set up    min_x |Ax - b|^2
