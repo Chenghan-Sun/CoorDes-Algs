@@ -2,21 +2,19 @@
 
 ## Group member:  Ninghui Li, Chenghan Sun, Han Chen 
 
-## Numerical Experiments Detail
+## Repository Description 
+### [/codebase](/codebase)
+[Accelerated_RCD.R](/codebase/Accelerate_RCD.R): Accelerated Randomized Coordinate Descent (Nesterov 2012)   
+[Pathwise_CD.R](/codebase/Pathwise_CD.R): Pathwise Coordinate descent for the lasso    
+[RCD.R](/codebase/RCD.R):  Coordinate Descent method with randomized / cyclic rules and fixed step size for solving quadratic form objective function and Gradient Descent as baseline model.   
+[Separable_RCD.R](/codebase/Separable_RCD.R):  Separable Coordinate Descent Algorithm for solving quadratic form objective function with L1 penalty(LASSO)   
 
-### Part I: Setup and Implementation 
-We consider solving synthetic instances of the linear regression model with least-squares objective function: 
+### [/notebook](/notebook)
+[STA243_final.pdf](/notebook/STA243_final.pdf)   Final report
 
-$$f^{*}:=\min_{\beta \in \mathbb{R}^{p}} f(\beta)=\|y-X \beta\|_{2}^{2}$$
+### [/test](/test)
+[Experiment.R](/test/Experiment.R) Experiment file
 
-using a baseline method Gradient Descent(GD), Randomized Coordinate Descent (RCD) Method (both were implemented codebase/RCD.R), and Accelerated Randomized Coordinate Descent (ARCD \ref{alg.acc}) Method (implemented in the submitted .R code named "Accelerated\_RCD.R"). The mechanism for generating the data(y, X) are described in the supplementary materials; functions for generating the simulation data could be found in the submitted .R code named "Experiment.R". 
+### [/fig](/fig)  
+Some figs used in the report.
 
-We also consider solving the linear regression model with $L_1$ penalty: 
-$$
-f^{*}:=\min _{\beta \in \mathbb{R}^{p}} f(\beta)=\|y-X \beta\|_{2}^{2} + \lambda \| \beta\|_1
-$$
-using the Separable Coordinate Descent (SpCD \ref{alg.sep}) Method (implemented in the submitted .R code named "Separable\_RCD.R"). 
-
-### Part I: Results and Analysis 
-
-Figure \ref{fig.gap} shows the optimality gap versus numbers of iteration for solving different instances of linear regression with different conditinoal numbers of the matrix $X^TX$ using RCD, ARCD and GD algorithms. In each plot, the vertical axis is the objective value optimality gap $f(\beta^k) - f^*$ in log scale. The horizontal axis is the numbers of iteration. Each column corresponds to an instance with the prescribed condition number $\kappa$ of $X^TX$. 
